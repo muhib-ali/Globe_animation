@@ -14,6 +14,7 @@ const Sec1 = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const glowRef = useRef(null);             // Holds the glow mesh
 const isGlowVisibleRef = useRef(false);   // Tracks if glow should be visible based on scroll
+const isWaitingRef = useRef(false);
 
 
   const texts = [
@@ -27,9 +28,7 @@ const isGlowVisibleRef = useRef(false);   // Tracks if glow should be visible ba
       {
         heading: "Variants 1",
         subheading: [
-          "1: BRCA1 variant found — may increase breast cancer risk",
-          "2: MTHFR mutation detected — related to metabolism",
-          "3: No major cardiovascular variants identified",
+          "a) BRCA1 variant found — may increase breast cancer risk",
         ],
         type: "slideInAndFade",
         otype: "Variant",
@@ -37,95 +36,72 @@ const isGlowVisibleRef = useRef(false);   // Tracks if glow should be visible ba
       {
         heading: "Recommendations 1",
         subheading: [
-          "Helpful Steps You Can Take",
-          "Understanding Your Results and What Comes Next",
+          "a) Helpful Steps You Can Take",
+          "b) Understanding Your Results and What Comes Next",
         ],
         type: "emit",
         otype: "Recommendation",
       },
-    ],
-    [
-      {
-        heading: "Summary 2",
-        subheading: ["A Quick Overview of Your Report"],
-        type: "slideInAndFade",
-        otype: "Summary",
-      },
-      {
-        heading: "Variants 2",
-        subheading: [
-          "1: BRCA2 variant found — possible hereditary link",
-          "2: APOE ε4 gene — related to Alzheimer's risk",
-        ],
-        type: "slideInAndFade",
-        otype: "Variant",
-      },
-      {
-        heading: "Diagnosis 1",
-        subheading: [
-          "Consult a specialist for personalized advice",
-          "Early screening may be beneficial",
-        ],
-        type: "emit",
-        otype: "Diagnosis",
-      },
-    ],
-    [
-      {
-        heading: "Summary 3",
-        subheading: ["A Quick Overview of Your Report"],
-        type: "slideInAndFade",
-        otype: "Summary",
-      },
-      {
-        heading: "Variants 3",
-        subheading: [
-          "1: BRCA2 variant found — possible hereditary link",
-          "2: APOE ε4 gene — related to Alzheimer's risk",
-        ],
-        type: "slideInAndFade",
-        otype: "Variant",
-      },
-      {
-        heading: "Recommendations 3",
-        subheading: [
-          "Consult a specialist for personalized advice",
-          "Early screening may be beneficial",
-        ],
-        type: "emit",
-        otype: "Recommendation",
-      },
-    ],
+    ],   
   ];
 
-  const createSequentialArray = () => {
-    const sequentialTexts = [];
-    texts.forEach(section => {
-      const summary = section.find(item => item.otype === "Summary");
-      const variant = section.find(item => item.otype === "Variant");
-      const recommendation = section.find(item => item.otype === "Recommendation");
-      const diagnosis = section.find(item => item.otype === "Diagnosis");
-      const lastItem = recommendation || diagnosis;
+ const createSequentialArray = () => {
+  const sequentialTexts = [];
 
-      if (summary) {
-        summary.subheading.forEach(sub => {
-          sequentialTexts.push({ heading: summary.heading, subheading: sub, otype: summary.otype, type: summary.type });
+  texts.forEach((section) => {
+    const summary = section.find((item) => item.otype === "Summary");
+    const variant = section.find((item) => item.otype === "Variant");
+    const recommendation = section.find((item) => item.otype === "Recommendation");
+    const diagnosis = section.find((item) => item.otype === "Diagnosis");
+
+    if (summary) {
+      summary.subheading.forEach((sub) => {
+        sequentialTexts.push({
+          heading: summary.heading,
+          subheading: sub,
+          otype: summary.otype,
+          type: summary.type,
         });
-      }
+      });
+    }
 
-      if (variant) {
-        sequentialTexts.push({ heading: variant.heading, subheading: variant.subheading, otype: variant.otype, type: variant.type });
-      }
-
-      if (lastItem) {
-        lastItem.subheading.forEach(sub => {
-          sequentialTexts.push({ heading: lastItem.heading, subheading: sub, otype: lastItem.otype, type: lastItem.type });
+    if (variant) {
+      variant.subheading.forEach((sub) => {
+        sequentialTexts.push({
+          heading: variant.heading,
+          subheading: sub,
+          otype: variant.otype,
+          type: variant.type,
         });
-      }
-    });
+      });
+    }
 
-    return sequentialTexts;
-  };
+    if (recommendation) {
+      recommendation.subheading.forEach((sub) => {
+        sequentialTexts.push({
+          heading: recommendation.heading,
+          subheading: sub,
+          otype: recommendation.otype,
+          type: recommendation.type,
+        });
+      });
+    }
+
+    if (diagnosis) {
+      diagnosis.subheading.forEach((sub) => {
+        sequentialTexts.push({
+          heading: diagnosis.heading,
+          subheading: sub,
+          otype: diagnosis.otype,
+          type: diagnosis.type,
+        });
+      });
+    }
+  });
+
+  return sequentialTexts;
+};
+
 
   const flatTexts = createSequentialArray();
 
@@ -147,7 +123,7 @@ useEffect(() => {
 
   const delayBeforeFadeOut = 4000; // ✅ Show text for 4 seconds
   const fadeOutDuration = 300;
-  const processingDelay = 2000;
+  const processingDelay = 3000;
 
   const delay = (prevType === "Variant" && (current === "Diagnosis" || current === "Recommendation"))
     ? processingDelay
@@ -158,10 +134,14 @@ useEffect(() => {
       setFade(false); // ⛔ Start fade-out after 4s
 
       timeout = setTimeout(() => {
-        if (delay > 0) setIsWaiting(true);
+        if (delay > 0) {setIsWaiting(true);
+          isWaitingRef.current = true;
+        }
 
         setTimeout(() => {
-          if (delay > 0) setIsWaiting(false);
+          if (delay > 0){ setIsWaiting(false);
+            isWaitingRef.current = false;
+          }
           setCurrentIndex(next);
           setFade(true); // ✅ Fade in new text
         }, delay);
@@ -202,22 +182,23 @@ useEffect(() => {
     });
 
     // Mouse interaction setup
-    const handleMouseMove = (event) => {
-     
-        isHoveringRef.current = false;
-     
-    };
+const handleMouseMove = (event) => {
+  const bounds = mountRef.current.getBoundingClientRect();
+  mouseRef.current.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+  mouseRef.current.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+  isHoveringRef.current = true;
+};
 
     const handleMouseLeave = () => {
-      if (scrollY > 200) {
-  isGlowVisibleRef.current = true;
-  mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  isHoveringRef.current = true;
-} else {
-  isGlowVisibleRef.current = false;
+       const scrollY = window.scrollY;
+
+  if (scrollY > 200) {
+    isGlowVisibleRef.current = true;
+  } else {
+    isGlowVisibleRef.current = false;
+  }
+
   isHoveringRef.current = false;
-}
     };
 
     // Add event listeners
@@ -265,12 +246,21 @@ useEffect(() => {
           const scrollSpeed = Math.abs(scrollY - (Sec1.lastScrollY || 0));
           Sec1.lastScrollY = scrollY;
 
-          const shake = scrollSpeed > 5 ? 0.02 : 0;
+          // const shake = scrollSpeed > 5 ? 0.02 : 0;
 
           // Base position with scroll shake
-          modelRef.current.position.x = baseX + (Math.random() - 0.5) * shake;
-          modelRef.current.position.y = baseY + (Math.random() - 0.5) * shake;
-          modelRef.current.position.z = (Math.random() - 0.5) * shake;
+const shake =
+  isWaitingRef.current && scrollY > 200
+    ? 0.04
+    : Math.abs(scrollY - (Sec1.lastScrollY || 0)) > 5
+    ? 0.02
+    : 0;
+
+
+modelRef.current.position.x = baseX + (Math.random() - 0.5) * shake;
+modelRef.current.position.y = baseY + (Math.random() - 0.5) * shake;
+modelRef.current.position.z = (Math.random() - 0.5) * shake;
+
 
           modelRef.current.scale.set(scale, scale, scale);
           
