@@ -4,6 +4,16 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { EXRLoader } from 'three-stdlib';
 
 const Sec1 = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const mountRef = useRef(null);
   const modelRef = useRef(null);
   const mouseRef = useRef(new THREE.Vector2());
@@ -12,155 +22,161 @@ const Sec1 = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
   const [isWaiting, setIsWaiting] = useState(false);
-  const glowRef = useRef(null);             // Holds the glow mesh
-const isGlowVisibleRef = useRef(false);   // Tracks if glow should be visible based on scroll
-const isWaitingRef = useRef(false);
-
+  const glowRef = useRef(null);
+  const isGlowVisibleRef = useRef(false);
+  const isWaitingRef = useRef(false);
 
   const texts = [
     [
       {
-        heading: "Summary 1",
-        subheading: ["A Quick Overview of Your Report"],
-        type: "slideInAndFade",
-        otype: "Summary",
+        heading: 'Summary 1',
+        subheading: ['A Quick Overview of Your Report'],
+        type: 'slideInAndFade',
+        otype: 'Summary',
       },
       {
-        heading: "Variants 1",
+        heading: 'Variants 1',
         subheading: [
-          "a) BRCA1 variant found — may increase breast cancer risk",
+          'a) BRCA1 variant found — may increase breast cancer risk',
         ],
-        type: "slideInAndFade",
-        otype: "Variant",
+        type: 'slideInAndFade',
+        otype: 'Variant',
       },
       {
-        heading: "Recommendations 1",
+        heading: 'Recommendations 1',
         subheading: [
-          "a) Helpful Steps You Can Take",
-          "b) Understanding Your Results and What Comes Next",
+          'a) Helpful Steps You Can Take',
+          'b) Understanding Your Results and What Comes Next',
         ],
-        type: "emit",
-        otype: "Recommendation",
+        type: 'emit',
+        otype: 'Recommendation',
       },
-    ],   
+    ],
   ];
 
- const createSequentialArray = () => {
-  const sequentialTexts = [];
+  const createSequentialArray = () => {
+    const sequentialTexts = [];
 
-  texts.forEach((section) => {
-    const summary = section.find((item) => item.otype === "Summary");
-    const variant = section.find((item) => item.otype === "Variant");
-    const recommendation = section.find((item) => item.otype === "Recommendation");
-    const diagnosis = section.find((item) => item.otype === "Diagnosis");
+    texts.forEach((section) => {
+      const summary = section.find((item) => item.otype === 'Summary');
+      const variant = section.find((item) => item.otype === 'Variant');
+      const recommendation = section.find(
+        (item) => item.otype === 'Recommendation'
+      );
+      const diagnosis = section.find((item) => item.otype === 'Diagnosis');
 
-    if (summary) {
-      summary.subheading.forEach((sub) => {
-        sequentialTexts.push({
-          heading: summary.heading,
-          subheading: sub,
-          otype: summary.otype,
-          type: summary.type,
+      if (summary) {
+        summary.subheading.forEach((sub) => {
+          sequentialTexts.push({
+            heading: summary.heading,
+            subheading: sub,
+            otype: summary.otype,
+            type: summary.type,
+          });
         });
-      });
-    }
+      }
 
-    if (variant) {
-      variant.subheading.forEach((sub) => {
-        sequentialTexts.push({
-          heading: variant.heading,
-          subheading: sub,
-          otype: variant.otype,
-          type: variant.type,
+      if (variant) {
+        variant.subheading.forEach((sub) => {
+          sequentialTexts.push({
+            heading: variant.heading,
+            subheading: sub,
+            otype: variant.otype,
+            type: variant.type,
+          });
         });
-      });
-    }
+      }
 
-    if (recommendation) {
-      recommendation.subheading.forEach((sub) => {
-        sequentialTexts.push({
-          heading: recommendation.heading,
-          subheading: sub,
-          otype: recommendation.otype,
-          type: recommendation.type,
+      if (recommendation) {
+        recommendation.subheading.forEach((sub) => {
+          sequentialTexts.push({
+            heading: recommendation.heading,
+            subheading: sub,
+            otype: recommendation.otype,
+            type: recommendation.type,
+          });
         });
-      });
-    }
+      }
 
-    if (diagnosis) {
-      diagnosis.subheading.forEach((sub) => {
-        sequentialTexts.push({
-          heading: diagnosis.heading,
-          subheading: sub,
-          otype: diagnosis.otype,
-          type: diagnosis.type,
+      if (diagnosis) {
+        diagnosis.subheading.forEach((sub) => {
+          sequentialTexts.push({
+            heading: diagnosis.heading,
+            subheading: sub,
+            otype: diagnosis.otype,
+            type: diagnosis.type,
+          });
         });
-      });
-    }
-  });
+      }
+    });
 
-  return sequentialTexts;
-};
-
+    return sequentialTexts;
+  };
 
   const flatTexts = createSequentialArray();
 
   const getAnimationClass = () => {
     const currentType = flatTexts[currentIndex]?.otype;
     if (isWaiting) return 'opacity-0';
-    if (currentType === "Summary" || currentType === "Variant") return 'animate-slideInAndFade';
-    if (currentType === "Diagnosis" || currentType === "Recommendation") return 'animate-emitFromGlobe';
+    if (currentType === 'Summary' || currentType === 'Variant')
+      return 'animate-slideInAndFade';
+    if (currentType === 'Diagnosis' || currentType === 'Recommendation')
+      return 'animate-emitFromGlobe';
     return 'opacity-100';
   };
 
-useEffect(() => {
-  let timeout;
+  useEffect(() => {
+    let timeout;
 
-  const prev = currentIndex;
-  const next = (prev + 1) % flatTexts.length;
-  const current = flatTexts[next]?.otype;
-  const prevType = flatTexts[prev]?.otype;
+    const prev = currentIndex;
+    const next = (prev + 1) % flatTexts.length;
+    const current = flatTexts[next]?.otype;
+    const prevType = flatTexts[prev]?.otype;
 
-  const delayBeforeFadeOut = 4000; // ✅ Show text for 4 seconds
-  const fadeOutDuration = 300;
-  const processingDelay = 3000;
+    const delayBeforeFadeOut = 4000;
+    const fadeOutDuration = 300;
+    const processingDelay = 3000;
 
-  const delay = (prevType === "Variant" && (current === "Diagnosis" || current === "Recommendation"))
-    ? processingDelay
-    : 0;
+    const delay =
+      prevType === 'Variant' &&
+      (current === 'Diagnosis' || current === 'Recommendation')
+        ? processingDelay
+        : 0;
 
-  const runTransition = () => {
-    setTimeout(() => {
-      setFade(false); // ⛔ Start fade-out after 4s
+    const runTransition = () => {
+      setTimeout(() => {
+        setFade(false);
 
-      timeout = setTimeout(() => {
-        if (delay > 0) {setIsWaiting(true);
-          isWaitingRef.current = true;
-        }
-
-        setTimeout(() => {
-          if (delay > 0){ setIsWaiting(false);
-            isWaitingRef.current = false;
+        timeout = setTimeout(() => {
+          if (delay > 0) {
+            setIsWaiting(true);
+            isWaitingRef.current = true;
           }
-          setCurrentIndex(next);
-          setFade(true); // ✅ Fade in new text
-        }, delay);
 
-      }, fadeOutDuration);
-    }, delayBeforeFadeOut);
-  };
+          setTimeout(() => {
+            if (delay > 0) {
+              setIsWaiting(false);
+              isWaitingRef.current = false;
+            }
+            setCurrentIndex(next);
+            setFade(true);
+          }, delay);
+        }, fadeOutDuration);
+      }, delayBeforeFadeOut);
+    };
 
-  runTransition(); // start first one
+    runTransition();
 
-  const interval = setInterval(runTransition, delayBeforeFadeOut + fadeOutDuration + delay + 100); // ⏱ Total cycle
+    const interval = setInterval(
+      runTransition,
+      delayBeforeFadeOut + fadeOutDuration + delay + 100
+    );
 
-  return () => {
-    clearInterval(interval);
-    clearTimeout(timeout);
-  };
-}, [currentIndex, flatTexts.length]);
-
-
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [currentIndex, flatTexts.length]);
 
   useEffect(() => {
     const width = mountRef.current.clientWidth;
@@ -181,35 +197,27 @@ useEffect(() => {
       scene.environment = texture;
     });
 
-    // Mouse interaction setup
-const handleMouseMove = (event) => {
-  const bounds = mountRef.current.getBoundingClientRect();
-  mouseRef.current.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-  mouseRef.current.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-  isHoveringRef.current = true;
-};
-
-    const handleMouseLeave = () => {
-       const scrollY = window.scrollY;
-
-  if (scrollY > 200) {
-    isGlowVisibleRef.current = true;
-  } else {
-    isGlowVisibleRef.current = false;
-  }
-
-  isHoveringRef.current = false;
+    const handleMouseMove = (event) => {
+      const bounds = mountRef.current.getBoundingClientRect();
+      mouseRef.current.x =
+        ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+      mouseRef.current.y =
+        -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+      isHoveringRef.current = true;
     };
 
-    // Add event listeners
+    const handleMouseLeave = () => {
+      const scrollY = window.scrollY;
+      isGlowVisibleRef.current = scrollY > 200;
+      setIsScrolled(scrollY > 100);
+      isHoveringRef.current = false;
+    };
+
     mountRef.current.addEventListener('mousemove', handleMouseMove);
     mountRef.current.addEventListener('mouseleave', handleMouseLeave);
 
-
-
     const loader = new GLTFLoader();
     loader.load('/models/sample2.glb', (gltf) => {
-        
       const model = gltf.scene;
       model.scale.set(4, 4, 4);
       const box = new THREE.Box3().setFromObject(model);
@@ -218,7 +226,7 @@ const handleMouseMove = (event) => {
       model.position.sub(center);
       model.position.y = -1.5;
 
-      model.traverse(child => {
+      model.traverse((child) => {
         if (child.isMesh && child.material) {
           child.material.color = new THREE.Color('#a9c9ff');
           child.material.metalness = 0.9;
@@ -238,97 +246,77 @@ const handleMouseMove = (event) => {
 
         if (modelRef.current) {
           const scrollY = window.scrollY;
-
           const baseY = -1.5 + scrollY * 0.0025;
           const baseX = -Math.min(scrollY / 800, 1) * 1.2;
           const scale = 3 - Math.min(scrollY / 800, 1);
 
-          const scrollSpeed = Math.abs(scrollY - (Sec1.lastScrollY || 0));
-          Sec1.lastScrollY = scrollY;
+          const pulseScale =
+            isWaitingRef.current && scrollY > 200
+              ? scale + Math.sin(Date.now() * 0.005) * 0.1
+              : scale;
 
-          // const shake = scrollSpeed > 5 ? 0.02 : 0;
+          modelRef.current.position.x = baseX;
+          modelRef.current.position.y = baseY;
+          modelRef.current.position.z = 0;
 
-          // Base position with scroll shake
-const shake =
-  isWaitingRef.current && scrollY > 200
-    ? 0.04
-    : Math.abs(scrollY - (Sec1.lastScrollY || 0)) > 5
-    ? 0.02
-    : 0;
-
-
-modelRef.current.position.x = baseX + (Math.random() - 0.5) * shake;
-modelRef.current.position.y = baseY + (Math.random() - 0.5) * shake;
-modelRef.current.position.z = (Math.random() - 0.5) * shake;
-
-
-          modelRef.current.scale.set(scale, scale, scale);
-          
-          // Y-axis rotation (constant)
+          modelRef.current.scale.set(pulseScale, pulseScale, pulseScale);
           modelRef.current.rotation.y += 0.003;
 
-          // X-axis rotation (scroll-based tilt like Earth)
           const baseTilt = Math.min(scrollY / 600, 0.6);
-          
-          // Enhanced hover effects - only when scrolled down
+
           if (isHoveringRef.current && scrollY > 200) {
-            // Smooth mouse-based tilt effects
-            const mouseInfluenceX = mouseRef.current.y * 0.15; // Vertical mouse = X rotation
-            const mouseInfluenceZ = mouseRef.current.x * 0.08; // Horizontal mouse = Z rotation
-            
-            // Apply smooth transitions
+            const mouseInfluenceX = mouseRef.current.y * 0.15;
+            const mouseInfluenceZ = mouseRef.current.x * 0.08;
+
             modelRef.current.rotation.x = THREE.MathUtils.lerp(
-              modelRef.current.rotation.x, 
-              baseTilt + mouseInfluenceX, 
-              0.05
-            );
-            
-            modelRef.current.rotation.z = THREE.MathUtils.lerp(
-              modelRef.current.rotation.z, 
-              mouseInfluenceZ, 
+              modelRef.current.rotation.x,
+              baseTilt + mouseInfluenceX,
               0.05
             );
 
-            // Enhanced material glow on hover
-            modelRef.current.traverse(child => {
+            modelRef.current.rotation.z = THREE.MathUtils.lerp(
+              modelRef.current.rotation.z,
+              mouseInfluenceZ,
+              0.05
+            );
+
+            modelRef.current.traverse((child) => {
               if (child.isMesh && child.material) {
                 child.material.envMapIntensity = THREE.MathUtils.lerp(
-                  child.material.envMapIntensity, 
-                  0.5, 
+                  child.material.envMapIntensity,
+                  0.5,
                   0.02
                 );
                 child.material.metalness = THREE.MathUtils.lerp(
-                  child.material.metalness, 
-                  0.95, 
+                  child.material.metalness,
+                  0.95,
                   0.02
                 );
               }
             });
           } else {
-            // Reset to base rotations smoothly
             modelRef.current.rotation.x = THREE.MathUtils.lerp(
-              modelRef.current.rotation.x, 
-              baseTilt, 
-              0.03
-            );
-            
-            modelRef.current.rotation.z = THREE.MathUtils.lerp(
-              modelRef.current.rotation.z, 
-              0, 
+              modelRef.current.rotation.x,
+              baseTilt,
               0.03
             );
 
-            // Reset material properties
-            modelRef.current.traverse(child => {
+            modelRef.current.rotation.z = THREE.MathUtils.lerp(
+              modelRef.current.rotation.z,
+              0,
+              0.03
+            );
+
+            modelRef.current.traverse((child) => {
               if (child.isMesh && child.material) {
                 child.material.envMapIntensity = THREE.MathUtils.lerp(
-                  child.material.envMapIntensity, 
-                  0.2, 
+                  child.material.envMapIntensity,
+                  0.2,
                   0.02
                 );
                 child.material.metalness = THREE.MathUtils.lerp(
-                  child.material.metalness, 
-                  0.9, 
+                  child.material.metalness,
+                  0.9,
                   0.02
                 );
               }
@@ -360,7 +348,8 @@ modelRef.current.position.z = (Math.random() - 0.5) * shake;
       <section className="relative w-full min-h-[200vh] overflow-x-hidden bg-gradient-to-r from-[#3D5EB8] via-[#9BCEFF] to-[#F8FCFF]">
         <div className="flex items-center justify-between px-6 py-4 z-20 sticky top-0 bg-transparent">
           <div className="text-black font-bold text-xl leading-tight tracking-tight">
-            <div>BLUE</div><div>YARD</div>
+            <div>BLUE</div>
+            <div>YARD</div>
           </div>
           <div className="w-9 h-9 border rounded-md flex flex-col justify-center items-center gap-[3px] cursor-pointer">
             <span className="w-5 h-[2px] bg-black"></span>
@@ -373,7 +362,12 @@ modelRef.current.position.z = (Math.random() - 0.5) * shake;
           Will it be Utopia, or Oblivion?
         </h1>
 
-        <div ref={mountRef} className="w-full h-[500px] fixed bottom-0 left-0 z-10 cursor-pointer" />
+        <div
+          ref={mountRef}
+          className={`w-full h-[500px] fixed ${
+            isScrolled ? 'bottom-3 mb-7' : 'bottom-0'
+          } left-0 z-10 cursor-pointer`}
+        />
         {!isLoaded && (
           <div className="absolute bottom-[150px] w-full text-center text-lg text-black font-medium z-10">
             Loading...
@@ -383,10 +377,12 @@ modelRef.current.position.z = (Math.random() - 0.5) * shake;
 
       <div
         key={currentIndex}
-        className={`overflow-x-hidden absolute top-[150%] translate-y-[-50%] right-10 z-[5] w-[40%] text-black px-6 ${getAnimationClass()}`}
+        className={`overflow-x-hidden absolute top-[144%] translate-y-[-50%] right-10 z-[5] bg-gradient-to-r from-[#A7C7E7] to-[#95cdf0] py-9 rounded-lg w-[40%] text-black px-6 ${getAnimationClass()} shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300`}
         style={{ opacity: fade && !isWaiting ? 1 : 0 }}
       >
-        <p className="text-sm tracking-widest text-gray-700 uppercase mb-4">{currentText?.heading}</p>
+        <p className="text-sm tracking-widest text-gray-700 uppercase mb-4">
+          {currentText?.heading}
+        </p>
         {Array.isArray(currentText?.subheading) ? (
           <ul className="list-disc pl-5 space-y-1 text-[15px] font-medium leading-relaxed">
             {currentText.subheading.map((item, i) => (
@@ -402,29 +398,63 @@ modelRef.current.position.z = (Math.random() - 0.5) * shake;
 
       {isWaiting && (
         <div className="absolute top-[150%] translate-y-[-50%] right-10 z-10 w-[40%] text-black px-6 opacity-50">
-          <p className="text-sm tracking-widest text-gray-700 uppercase mb-4">Processing...</p>
+          <p className="text-sm tracking-widest text-gray-700 uppercase mb-4">
+            Processing...
+          </p>
         </div>
       )}
 
       <style jsx>{`
         @keyframes slideInAndFade {
-          0% { transform: translateX(100%) scale(1); opacity: 0; }
-          25%, 50% { transform: translateX(0%) scale(1); opacity: 1; }
-          100% { transform: translateX(-60%) scale(0.5); opacity: 0.1; }
+          0% {
+            transform: translateX(100%) scale(1);
+            opacity: 0;
+          }
+          25% {
+            transform: translateX(0%) scale(1);
+            opacity: 1;
+          }
+          50%  {
+            transform: translateX(-20%) translateY(-100%)  scale(0.8);
+            opacity: 1;
+          }
+           
+             
+          100% {
+            transform: translateX(-90%) translateY(-40%)   scale(0.2);
+            opacity: 1;
+          }
         }
 
         @keyframes fadeInFromGlobeAndExitLikeSummary {
-          0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-          25%, 50% { transform: translateX(0%) scale(1); opacity: 1; }
-          100% { transform: translateX(-50%) scale(0.5); opacity: 0.2; }
+          0% {
+            transform: translateX(-50%) scale(0.2);
+            opacity: 0;
+          }
+          25% {
+            transform: translateX(0%) scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: translateX(0%) scale(1);
+            opacity: 1;
+          }
+          70% {
+            transform: translateX(-20%) translateY(-100%) scale(0.9);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-90%) translateY(-100%) scale(0.2);
+            opacity: 1;
+          }
         }
 
         .animate-slideInAndFade {
-          animation: slideInAndFade 4.3s ease-in-out forwards;
+          animation: slideInAndFade 3s linear forwards;
         }
 
         .animate-emitFromGlobe {
-          animation: fadeInFromGlobeAndExitLikeSummary 4.3s ease-in-out forwards;
+          animation: fadeInFromGlobeAndExitLikeSummary 3s linear forwards;
         }
       `}</style>
 
@@ -442,17 +472,27 @@ modelRef.current.position.z = (Math.random() - 0.5) * shake;
         }
 
         ::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #3D5EB8, #9BCEFF, #F8FCFF);
+          background: linear-gradient(
+            to bottom,
+            #3d5eb8,
+            #9bceff,
+            #f8fcff
+          );
           border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #2c4aad, #86b8e4, #e3f3ff);
+          background: linear-gradient(
+            to bottom,
+            #2c4aad,
+            #86b8e4,
+            #e3f3ff
+          );
         }
 
         body {
           scrollbar-width: thin;
-          scrollbar-color: #9BCEFF #f1f5ff;
+          scrollbar-color: #9bceff #f1f5ff;
         }
       `}</style>
     </>
