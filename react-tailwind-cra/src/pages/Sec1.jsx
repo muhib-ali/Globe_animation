@@ -25,16 +25,17 @@ const Sec1 = () => {
 
   const texts = [
     [
-      { heading: 'Summary', subheading: ['Young Adult With Treatment-Resistant Depression'], desc: [''], type: 'slideInAndFade', otype: 'Summary' },
+      // { heading: 'Summary', subheading: ['Young Adult With Treatment-Resistant Depression'], desc: [''], type: 'slideInAndFade', otype: 'Summary' },
       { heading: 'Genome findings:', subheading: [''], desc: ['Homozygous MTHFR C677T (TT) → impaired methyl-folate recycling; SLC6A4 5-HTTLPR S/S → poor SSRI response'], type: 'slideInAndFade', otype: 'Variant' },
       { heading: 'Molecular findings:', subheading: [''], desc: ['Plasma homocysteine 17 µmol/L (↑); RBC folate 350 ng/mL (low-normal); CSF 5-HIAA below age norms'], type: 'slideInAndFade', otype: 'Variant' },
       { heading: 'Microbiome findings: ', subheading: [''], desc: ['Low Bifidobacterium and Akkermansia abundance; high gut-derived LPS gene counts indicating systemic inflammation'], type: 'slideInAndFade', otype: 'Variant' },
+
       { heading: 'Clinical diagnosis:', subheading: [''], desc: ['Major depressive disorder, SSRI-resistant subtype'], type: 'emit', otype: 'Recommendation' },
-      // { heading: 'Clinical recommendation:', subheading: [''], desc: ['L-methylfolate 15 mg qd (± SAMe); switch from SSRI to vortioxetine; introduce high-CFU B. longum 1714 psychobiotic; anti-inflammatory, high-prebiotic diet'], type: 'emit', otype: 'Recommendation' },
+      { heading: 'Clinical recommendation:', subheading: [''], desc: ['L-methylfolate 15 mg qd (± SAMe); switch from SSRI to vortioxetine; introduce high-CFU B. longum 1714 psychobiotic; anti-inflammatory, high-prebiotic diet'], type: 'emit', otype: 'Recommendation' },
     ],
   ];
 
-  // ---- build sequence: Summary -> Variants -> Recommendations -> (Diagnosis if any)
+  // ---- build sequence: Summary -> Variants -> Recommendations (bundled) -> Diagnosis (if any)
   const createSequentialArray = () => {
     const sequentialTexts = [];
 
@@ -43,7 +44,6 @@ const Sec1 = () => {
         const subsArr = Array.isArray(item.subheading) ? item.subheading : [item.subheading];
         const descArr = Array.isArray(item.desc) ? item.desc : [item.desc];
 
-        // remove empty strings/nulls
         const cleanSubs = subsArr.filter((s) => s && String(s).trim() !== '');
         const cleanDescs = descArr.filter((d) => d && String(d).trim() !== '');
 
@@ -51,7 +51,7 @@ const Sec1 = () => {
           cleanSubs.forEach((sub) => {
             sequentialTexts.push({
               heading: item.heading,
-              subheading: sub,   // string
+              subheading: sub,
               desc: null,
               otype: item.otype,
               type: item.type,
@@ -61,14 +61,13 @@ const Sec1 = () => {
           cleanDescs.forEach((d) => {
             sequentialTexts.push({
               heading: item.heading,
-              subheading: null,  // force desc fallback
-              desc: d,           // string
+              subheading: null,
+              desc: d,
               otype: item.otype,
               type: item.type,
             });
           });
         } else {
-          // nothing to show, but keep heading
           sequentialTexts.push({
             heading: item.heading,
             subheading: null,
@@ -88,7 +87,25 @@ const Sec1 = () => {
 
       pushItems(summaries);
       pushItems(variants);
-      pushItems(recommendations);
+
+      if (recommendations.length) {
+        const bundleItems = recommendations.map((item) => {
+          const subsArr = Array.isArray(item.subheading) ? item.subheading : [item.subheading];
+          const descArr = Array.isArray(item.desc) ? item.desc : [item.desc];
+          const cleanSubs = subsArr.filter((s) => s && String(s).trim() !== '');
+          const cleanDescs = descArr.filter((d) => d && String(d).trim() !== '');
+          const text = cleanSubs[0] ?? cleanDescs[0] ?? '';
+          return { heading: item.heading, text };
+        });
+
+        sequentialTexts.push({
+          heading: 'Recommendations',
+          otype: 'Recommendation',
+          type: 'emit',
+          bundle: bundleItems,
+        });
+      }
+
       pushItems(diagnoses);
     });
 
@@ -198,8 +215,8 @@ const Sec1 = () => {
       model.position.y = -1.5;
 
       model.traverse((child) => {
-        if (child.isMesh && child.material) {//#a9c9ff
-          child.material.color = new THREE.Color('#a9c9ff');
+        if (child.isMesh && child.material) {
+          child.material.color = new THREE.Color('#0077FF');
           child.material.metalness = 0.9;
           child.material.roughness = 0.5;
           child.material.envMapIntensity = 0.2;
@@ -224,8 +241,7 @@ const Sec1 = () => {
           modelRef.current.position.z = 0;
 
           const scale = 3 - Math.min(scrollY / 800, 1);
-          const pulseScale =
-            isWaitingRef.current && scrollY > 200 ? scale + Math.sin(Date.now() * 0.005) * 0.1 : scale;
+          const pulseScale = isWaitingRef.current && scrollY > 200 ? scale + Math.sin(Date.now() * 0.005) * 0.1 : scale;
 
           modelRef.current.scale.set(pulseScale, pulseScale, pulseScale);
           modelRef.current.rotation.y += 0.003;
@@ -285,6 +301,10 @@ const Sec1 = () => {
 
   const currentText = flatTexts[currentIndex];
 
+  // === show heading only when scrolled AND current otype is Variant AND not waiting
+  const showVariantHeading =
+    isScrolled && !isWaiting && currentText?.otype === 'Variant';
+
   return (
     <>
       {/* GALAXY BACKGROUND */}
@@ -298,26 +318,27 @@ const Sec1 = () => {
       {/* CONTENT */}
       <section className="relative w-full min-h-[200vh] overflow-x-hidden">
         <div className="flex items-center justify-between px-6 py-4 z-20 sticky top-0 bg-transparent">
-          <div className="text-black font-bold text-xl leading-tight tracking-tight">
+          <div className="text-white font-bold text-xl leading-tight tracking-tight">
             <div>BLUE</div>
             <div>YARD</div>
           </div>
           <div className="w-9 h-9 border rounded-md flex flex-col justify-center items-center gap-[3px] cursor-pointer">
-            <span className="w-5 h-[2px] bg-black"></span>
-            <span className="w-5 h-[2px] bg-black"></span>
-            <span className="w-5 h-[2px] bg-black"></span>
+            <span className="w-5 h-[2px] bg-white"></span>
+            <span className="w-5 h-[2px] bg-white"></span>
+            <span className="w-5 h-[2px] bg-white"></span>
           </div>
         </div>
 
-        <h1 className="text-center font-thin text-[28px] md:text-[40px] text-black mt-[10vh]">
+        <h1 className="text-center font-thin text-[28px] md:text-[40px] text-white mt-[10vh]">
           Will it be Utopia, or Oblivion?
         </h1>
 
-        {/* Globe (fixed) */}
+        {/* Fixed Globe */}
         <div
           ref={mountRef}
           className={`w-full h-[500px] fixed ${isScrolled ? 'bottom-3 mb-7' : 'bottom-0'} left-0 z-10 cursor-pointer`}
         />
+
         {!isLoaded && (
           <div className="absolute bottom-[150px] w-full text-center text-lg text-black font-medium z-10">
             Loading...
@@ -332,6 +353,21 @@ const Sec1 = () => {
         style={{ width: 'var(--mid-gap)' }}
       />
 
+      {/* >>> CONDITIONAL VARIANT HEADING <<< */}
+      {showVariantHeading && (
+        <h2
+          className="
+            variant-heading fixed text-center
+            top-[30px] 
+            text-white text-[30px] w-full  font-semibold
+            tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]
+            z-[40] pointer-events-none
+          "
+        >
+          Young Adult With Treatment-Resistant Depression
+        </h2>
+      )}
+
       {/* Floating card */}
       <div
         key={currentIndex}
@@ -343,18 +379,25 @@ const Sec1 = () => {
           right: 'calc(2rem + var(--mid-gap))',
         }}
       >
-        <p className="text-sm tracking-widest leading-loose text-gray-700 text-[26.66px] font-bold uppercase mb-4">
-          {currentText?.heading}
-        </p>
-
-        {currentText?.subheading && String(currentText.subheading).trim() !== '' ? (
-          <h2 className="text-[22.6px] font-medium leading-relaxed">
-            {currentText.subheading}
-          </h2>
-        ) : (
-          <p className="text-[19px] font-normal leading-relaxed">
-            {currentText?.desc}
+        {!currentText?.bundle && (
+          <p className="text-sm tracking-widest leading-loose text-gray-700 text-[26.66px] font-bold uppercase mb-4">
+            {currentText?.heading}
           </p>
+        )}
+
+        {currentText?.bundle ? (
+          <div className="space-y-1">
+            {currentText.bundle.map((b, i) => (
+              <div key={i}>
+                <p className="text-sm tracking-widest text-black/80 uppercase mb-1">{b.heading}</p>
+                <p className="text-[19px] leading-relaxed">{b.text}</p>
+              </div>
+            ))}
+          </div>
+        ) : currentText?.subheading && String(currentText.subheading).trim() !== '' ? (
+          <h2 className="text-[22.6px] font-medium leading-relaxed">{currentText.subheading}</h2>
+        ) : (
+          <p className="text-[19px] font-normal leading-relaxed">{currentText?.desc}</p>
         )}
       </div>
 
@@ -374,16 +417,16 @@ const Sec1 = () => {
         @keyframes slideInAndFade {
           0% { transform: translateX(200%) scale(1); opacity: 0; }
           25%,35%,40% { transform: translateX(0%) scale(1); opacity: 1; }
-          50% { transform: translateX(-20%) translateY(-100%) scale(0.8); opacity: 1; }
-          100% { transform: translateX(-90%) translateY(-40%) scale(0.2); opacity: 1; }
+          50% { transform: translateX(-20%) translateY(-70%) scale(0.8); opacity: 1; }
+          100% { transform: translateX(-100%) translateY(-40%) scale(0.2); opacity: 1; }
         }
         @keyframes fadeInFromGlobeAndExitLikeSummary {
           0% { transform: translateX(-90%) translateY(-40%) scale(0.2); opacity: 0; }
           25% { transform: translateX(0%) scale(1); opacity: 1; }
           50%,70%,100% { transform: translateX(0%) scale(1); opacity: 1; }
         }
-        .animate-slideInAndFade { animation: slideInAndFade 4s linear forwards; }
-        .animate-emitFromGlobe { animation: fadeInFromGlobeAndExitLikeSummary 4s linear forwards; }
+        .animate-slideInAndFade { animation: slideInAndFade 5s linear forwards; }
+        .animate-emitFromGlobe { animation: fadeInFromGlobeAndExitLikeSummary 5s linear forwards; }
 
         .bg {
           background: url(https://i.ibb.co/87GbbFP/2799006.jpg) no-repeat;
