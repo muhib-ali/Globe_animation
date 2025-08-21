@@ -391,14 +391,15 @@ const Sec1 = () => {
       <AnimatePresence>
         {showVariantHeading && (
           <motion.h2
-            key={`heading-${isScrolled}-${currentIndex}`}
+            // key={`heading-${isScrolled}-${currentIndex}`}
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            // exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
             className="variant-heading fixed text-center top-[30px] text-white text-[30px] w-full font-semibold tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] z-[40] pointer-events-none"
           >
-            {scrollY>200?"Young Adult With Treatment-Resistant Depression":""}
+            {scrollY>200?" Young Adult With Treatment-Resistant Depression":""}
+           
           </motion.h2>
         )}
       </AnimatePresence>
