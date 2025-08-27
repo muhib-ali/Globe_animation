@@ -354,14 +354,14 @@ const Sec1 = () => {
       <section className="relative w-full min-h-[200vh] overflow-x-hidden">
         <div className="flex items-center justify-between px-6 py-4 z-20 sticky top-0 bg-transparent">
           <div className="text-white font-bold text-xl leading-tight tracking-tight">
-            <div>BLUE</div>
-            <div>YARD</div>
+            <div>Bioscope.AI</div>
+            {/* <div>YARD</div> */}
           </div>
-          <div className="w-9 h-9 border rounded-md flex flex-col justify-center items-center gap-[3px] cursor-pointer">
+          {/* <div className="w-9 h-9 border rounded-md flex flex-col justify-center items-center gap-[3px] cursor-pointer">
             <span className="w-5 h-[2px] bg-white"></span>
             <span className="w-5 h-[2px] bg-white"></span>
             <span className="w-5 h-[2px] bg-white"></span>
-          </div>
+          </div> */}
         </div>
 
         <h1 className="text-center font-thin text-[28px] md:text-[40px] text-white mt-[10vh]">
