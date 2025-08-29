@@ -229,7 +229,9 @@ const Sec1 = () => {
     const loader = new GLTFLoader()
     loader.load('/models/sample2.glb', (gltf) => {
       const model = gltf.scene
-      model.scale.set(4, 4, 4)
+      // Responsive initial scale to prevent cutoff on different screen sizes
+      const initialScale = window.innerWidth > 1400 ? 3.8 : window.innerWidth < 768 ? 4.5 : 4
+      model.scale.set(initialScale, initialScale, initialScale)
       const box = new THREE.Box3().setFromObject(model)
       const center = new THREE.Vector3()
       box.getCenter(center)
@@ -262,7 +264,9 @@ const Sec1 = () => {
           modelRef.current.position.y = baseY
           modelRef.current.position.z = 0
 
-          const scale = 3 - Math.min(scrollY / 800, 1)
+          // Responsive scale calculation to maintain proportions on all screens
+          const baseScale = window.innerWidth > 1400 ? 2.8 : window.innerWidth < 768 ? 3.4 : 3
+          const scale = baseScale - Math.min(scrollY / 800, 1)
           const pulseScale =
             isWaitingRef.current && scrollY > THRESHOLD
               ? scale + Math.sin(Date.now() * 0.005) * 0.1
@@ -371,7 +375,11 @@ const Sec1 = () => {
         {/* Globe mount */}
         <div
           ref={mountRef}
-          className={`w-full h-[500px] fixed ${isScrolled ? 'bottom-3 mb-7' : 'bottom-0'} left-0 z-10 cursor-pointer`}
+          className={`w-full h-[500px] fixed ${isScrolled ? 'bottom-3 mb-7  ' : 'bottom-0'} z-10 cursor-pointer`}
+          style={{
+            left: 'clamp(-15vw, 0px, 15vw)',
+            width: 'clamp(80vw, 100vw, 120vw)'
+          }}
         />
 
         {!isLoaded && (
@@ -446,7 +454,18 @@ const Sec1 = () => {
       )}
 
       <style>{`
-        :root { --mid-gap: 5vw; }
+        :root { 
+          --mid-gap: 5vw; 
+        }
+
+        /* Responsive adjustments for globe visibility */
+        @media (min-width: 1400px) {
+          :root { --mid-gap: 8vw; }
+        }
+        
+        @media (max-width: 768px) {
+          :root { --mid-gap: 2vw; }
+        }
 
         @keyframes slideInAndFade {
           0% { transform: translateX(200%) scale(1); opacity: 0; }
